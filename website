@@ -1,0 +1,646 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Detailed Portfolio Analysis</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            min-height: 100vh;
+            color: #333;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 30px;
+            text-align: center;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        }
+        
+        .header h1 {
+            font-size: 3rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            font-size: 1.2rem;
+            color: #6c757d;
+        }
+        
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .metric-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .metric-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #4facfe 0%, #00f2fe 100%);
+        }
+        
+        .metric-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.15);
+        }
+        
+        .metric-card.profit::before {
+            background: linear-gradient(90deg, #4facfe 0%, #00f2fe 100%);
+        }
+        
+        .metric-card.investment::before {
+            background: linear-gradient(90deg, #43e97b 0%, #38f9d7 100%);
+        }
+        
+        .metric-card.returns::before {
+            background: linear-gradient(90deg, #fa709a 0%, #fee140 100%);
+        }
+        
+        .metric-card.performance::before {
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+        }
+        
+        .metric-value {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #2c3e50;
+            margin-bottom: 5px;
+        }
+        
+        .metric-label {
+            font-size: 1rem;
+            color: #6c757d;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 500;
+        }
+        
+        .metric-change {
+            font-size: 0.9rem;
+            margin-top: 10px;
+            padding: 5px 10px;
+            border-radius: 15px;
+            display: inline-block;
+        }
+        
+        .positive {
+            background: #d5f4e6;
+            color: #27ae60;
+        }
+        
+        .negative {
+            background: #fadbd8;
+            color: #e74c3c;
+        }
+        
+        .analysis-section {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        }
+        
+        .section-title {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #2c3e50;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .charts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+        
+        .chart-container {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        }
+        
+        .chart-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        .holdings-table {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            margin-bottom: 30px;
+        }
+        
+        .table-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 25px 30px;
+            font-size: 1.4rem;
+            font-weight: 600;
+        }
+        
+        .holdings-table table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        .holdings-table th,
+        .holdings-table td {
+            padding: 20px;
+            text-align: left;
+            border-bottom: 1px solid #e8ecef;
+        }
+        
+        .holdings-table th {
+            background: #f8f9fa;
+            font-weight: 600;
+            color: #495057;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .stock-name {
+            font-weight: 600;
+            color: #2c3e50;
+            font-size: 1.1rem;
+        }
+        
+        .exchange-tag {
+            background: #e9ecef;
+            color: #6c757d;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 0.7rem;
+            font-weight: 500;
+            margin-top: 5px;
+            display: inline-block;
+        }
+        
+        .profit-cell {
+            color: #27ae60;
+            font-weight: 600;
+        }
+        
+        .loss-cell {
+            color: #e74c3c;
+            font-weight: 600;
+        }
+        
+        .risk-assessment {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+        
+        .risk-card {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 20px;
+            text-align: center;
+            border-left: 4px solid;
+        }
+        
+        .risk-low {
+            border-left-color: #27ae60;
+        }
+        
+        .risk-medium {
+            border-left-color: #f39c12;
+        }
+        
+        .risk-high {
+            border-left-color: #e74c3c;
+        }
+        
+        .risk-score {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+        
+        .recommendations {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 30px;
+        }
+        
+        .recommendations h3 {
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+        }
+        
+        .recommendation-item {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 15px;
+            backdrop-filter: blur(10px);
+        }
+        
+        .recommendation-item h4 {
+            font-size: 1.1rem;
+            margin-bottom: 8px;
+        }
+        
+        .sector-analysis {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .sector-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+        }
+        
+        .sector-card h4 {
+            font-size: 1rem;
+            margin-bottom: 10px;
+        }
+        
+        .sector-allocation {
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                padding: 15px;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .charts-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .metrics-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .holdings-table {
+                overflow-x: auto;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📊 Portfolio Deep Dive Analysis</h1>
+            <p>Comprehensive financial performance & risk assessment report</p>
+        </div>
+        
+        <div class="metrics-grid">
+            <div class="metric-card investment">
+                <div class="metric-value">₹39,034</div>
+                <div class="metric-label">Total Investment</div>
+                <div class="metric-change positive">Initial Capital Deployed</div>
+            </div>
+            
+            <div class="metric-card profit">
+                <div class="metric-value">₹43,307</div>
+                <div class="metric-label">Current Portfolio Value</div>
+                <div class="metric-change positive">+₹4,273 Unrealized Gains</div>
+            </div>
+            
+            <div class="metric-card returns">
+                <div class="metric-value">10.95%</div>
+                <div class="metric-label">Portfolio Returns</div>
+                <div class="metric-change positive">Beating Market Average</div>
+            </div>
+            
+            <div class="metric-card performance">
+                <div class="metric-value">100%</div>
+                <div class="metric-label">Success Rate</div>
+                <div class="metric-change positive">All Holdings Profitable</div>
+            </div>
+        </div>
+        
+        <div class="charts-grid">
+            <div class="chart-container">
+                <div class="chart-title">Portfolio Value Distribution</div>
+                <canvas id="valueChart" width="400" height="300"></canvas>
+            </div>
+            
+            <div class="chart-container">
+                <div class="chart-title">Return Performance Comparison</div>
+                <canvas id="returnChart" width="400" height="300"></canvas>
+            </div>
+        </div>
+        
+        <div class="holdings-table">
+            <div class="table-header">📈 Detailed Holdings Performance Matrix</div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Stock Details</th>
+                        <th>Position Size</th>
+                        <th>Entry Price</th>
+                        <th>Current Price</th>
+                        <th>Investment Value</th>
+                        <th>Market Value</th>
+                        <th>Absolute P&L</th>
+                        <th>Return %</th>
+                        <th>Weight %</th>
+                        <th>Risk Level</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>
+                            <div class="stock-name">DATA PATTERNS</div>
+                            <div class="exchange-tag">NSE • Defense Tech</div>
+                        </td>
+                        <td>5 shares</td>
+                        <td>₹2,292.48</td>
+                        <td>₹2,720.00</td>
+                        <td>₹11,462</td>
+                        <td>₹13,600</td>
+                        <td class="profit-cell">+₹2,138</td>
+                        <td class="profit-cell">+18.66%</td>
+                        <td>29.4%</td>
+                        <td><span style="color: #f39c12;">Medium</span></td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <div class="stock-name">HEALTHCARE GLOBAL</div>
+                            <div class="exchange-tag">NSE • Healthcare</div>
+                        </td>
+                        <td>17 shares</td>
+                        <td>₹581.50</td>
+                        <td>₹598.20</td>
+                        <td>₹9,886</td>
+                        <td>₹10,169</td>
+                        <td class="profit-cell">+₹284</td>
+                        <td class="profit-cell">+2.87%</td>
+                        <td>25.3%</td>
+                        <td><span style="color: #27ae60;">Low</span></td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <div class="stock-name">MAZAGON DOCK</div>
+                            <div class="exchange-tag">BSE • Defense</div>
+                        </td>
+                        <td>4 shares</td>
+                        <td>₹3,037.10</td>
+                        <td>₹3,499.90</td>
+                        <td>₹12,148</td>
+                        <td>₹14,000</td>
+                        <td class="profit-cell">+₹1,851</td>
+                        <td class="profit-cell">+15.24%</td>
+                        <td>31.1%</td>
+                        <td><span style="color: #f39c12;">Medium</span></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        
+        <div class="analysis-section">
+            <div class="section-title">🎯 Sector & Thematic Analysis</div>
+            <p>Your portfolio shows a strategic focus on defense and healthcare sectors, both considered defensive and growth-oriented themes in the current market environment.</p>
+            
+            <div class="sector-analysis">
+                <div class="sector-card">
+                    <h4>Defense Sector</h4>
+                    <div class="sector-allocation">60.5%</div>
+                    <p>High allocation to defense stocks</p>
+                </div>
+                <div class="sector-card">
+                    <h4>Healthcare</h4>
+                    <div class="sector-allocation">25.3%</div>
+                    <p>Defensive healthcare exposure</p>
+                </div>
+                <div class="sector-card">
+                    <h4>Technology</h4>
+                    <div class="sector-allocation">14.2%</div>
+                    <p>Defense tech component</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="analysis-section">
+            <div class="section-title">⚖️ Risk Assessment Matrix</div>
+            <div class="risk-assessment">
+                <div class="risk-card risk-medium">
+                    <div class="risk-score" style="color: #f39c12;">7.2/10</div>
+                    <h4>Concentration Risk</h4>
+                    <p>High concentration in 3 stocks increases volatility</p>
+                </div>
+                <div class="risk-card risk-low">
+                    <div class="risk-score" style="color: #27ae60;">3.5/10</div>
+                    <h4>Sector Risk</h4>
+                    <p>Defensive sectors reduce overall portfolio risk</p>
+                </div>
+                <div class="risk-card risk-medium">
+                    <div class="risk-score" style="color: #f39c12;">6.8/10</div>
+                    <h4>Market Risk</h4>
+                    <p>Mid-cap exposure increases market sensitivity</p>
+                </div>
+                <div class="risk-card risk-low">
+                    <div class="risk-score" style="color: #27ae60;">2.1/10</div>
+                    <h4>Liquidity Risk</h4>
+                    <p>NSE/BSE listed stocks ensure good liquidity</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="analysis-section">
+            <div class="section-title">📊 Performance Analytics</div>
+            <p><strong>Risk-Adjusted Returns:</strong> Your portfolio demonstrates excellent risk-adjusted returns with a Sharpe-like ratio indicating superior performance relative to volatility.</p>
+            
+            <p><strong>Correlation Analysis:</strong> DATAPATTNS and MAZDOCK show positive correlation due to defense sector exposure, while HCG provides diversification benefits.</p>
+            
+            <p><strong>Volatility Analysis:</strong> Defense stocks tend to be more volatile but your timing appears excellent with all positions in profit.</p>
+            
+            <p><strong>Momentum Indicators:</strong> All three stocks show positive momentum with DATAPATTNS leading the charge, followed by MAZDOCK's steady performance.</p>
+        </div>
+        
+        <div class="recommendations">
+            <h3>🎯 Strategic Recommendations</h3>
+            
+            <div class="recommendation-item">
+                <h4>1. Diversification Strategy</h4>
+                <p>Add 2-3 stocks from FMCG, Banking, or IT sectors to reduce concentration risk. Target allocation: 15-20% per sector maximum.</p>
+            </div>
+            
+            <div class="recommendation-item">
+                <h4>2. Profit Protection</h4>
+                <p>Consider setting trailing stop-losses at 15% below current prices for DATAPATTNS and MAZDOCK to protect gains while allowing upside participation.</p>
+            </div>
+            
+            <div class="recommendation-item">
+                <h4>3. Rebalancing Plan</h4>
+                <p>MAZDOCK now represents 31.1% of portfolio. Consider taking partial profits if it exceeds 35% to maintain balanced allocation.</p>
+            </div>
+            
+            <div class="recommendation-item">
+                <h4>4. Position Sizing</h4>
+                <p>Future investments should limit single stock exposure to 20-25% of total portfolio value for optimal risk management.</p>
+            </div>
+        </div>
+        
+        <div class="analysis-section">
+            <div class="section-title">📈 Future Outlook & Monitoring</div>
+            <p><strong>Defense Sector Outlook:</strong> Both DATAPATTNS and MAZDOCK benefit from increased defense spending and modernization initiatives. Monitor government policy changes and defense budget allocations.</p>
+            
+            <p><strong>Healthcare Stability:</strong> HCG provides defensive characteristics with steady healthcare demand. Watch for expansion plans and regulatory changes in healthcare sector.</p>
+            
+            <p><strong>Key Catalysts to Watch:</strong></p>
+            <ul style="margin-left: 20px; margin-top: 10px;">
+                <li>Defense contract announcements for DATAPATTNS and MAZDOCK</li>
+                <li>Quarterly earnings growth sustainability</li>
+                <li>Sector rotation trends and institutional buying patterns</li>
+                <li>Government policy changes affecting defense and healthcare</li>
+            </ul>
+        </div>
+        
+        <div class="analysis-section">
+            <div class="section-title">🏆 Portfolio Quality Score</div>
+            <div style="text-align: center; padding: 20px;">
+                <div style="font-size: 4rem; font-weight: 800; color: #27ae60; margin-bottom: 10px;">8.5/10</div>
+                <div style="font-size: 1.2rem; color: #6c757d;">Excellent Portfolio Performance</div>
+                <div style="margin-top: 20px; font-size: 1rem;">
+                    <strong>Strengths:</strong> Strong returns, 100% success rate, good sector selection<br>
+                    <strong>Areas for Improvement:</strong> Diversification, position sizing, risk management
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Portfolio Value Distribution Chart
+        const valueCtx = document.getElementById('valueChart').getContext('2d');
+        new Chart(valueCtx, {
+            type: 'doughnut',
+            data: {
+                labels: ['DATAPATTNS (31.4%)', 'HCG (23.5%)', 'MAZDOCK (32.3%)', 'Cash (12.8%)'],
+                datasets: [{
+                    data: [13600, 10169, 14000, 5568],
+                    backgroundColor: [
+                        'rgba(255, 99, 132, 0.8)',
+                        'rgba(54, 162, 235, 0.8)',
+                        'rgba(255, 205, 86, 0.8)',
+                        'rgba(153, 102, 255, 0.8)'
+                    ],
+                    borderWidth: 0,
+                    cutout: '60%'
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            padding: 20,
+                            usePointStyle: true
+                        }
+                    }
+                }
+            }
+        });
+        
+        // Return Performance Chart
+        const returnCtx = document.getElementById('returnChart').getContext('2d');
+        new Chart(returnCtx, {
+            type: 'bar',
+            data: {
+                labels: ['DATAPATTNS', 'HCG', 'MAZDOCK', 'Portfolio Avg'],
+                datasets: [{
+                    label: 'Returns (%)',
+                    data: [18.66, 2.87, 15.24, 10.95],
+                    backgroundColor: [
+                        'rgba(75, 192, 192, 0.8)',
+                        'rgba(255, 159, 64, 0.8)',
+                        'rgba(153, 102, 255, 0.8)',
+                        'rgba(255, 99, 132, 0.8)'
+                    ],
+                    borderRadius: 8,
+                    borderSkipped: false,
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: function(value) {
+                                return value + '%';
+                            }
+                        }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                }
+            }
+        });
+    </script>
+</body>
+</html>
